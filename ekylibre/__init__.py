@@ -1,6 +1,8 @@
 from mycroft.configuration import ConfigurationManager
+from mycroft.util.log import LOG
+from ekylibre.tls_adapter import TlsAdapter
 import requests
-from requests.auth import HTTPBasicAuth
+import json
 
 
 class EkylibreApi:
@@ -9,26 +11,48 @@ class EkylibreApi:
     def __init__(self):
         self.config_api = ConfigurationManager.get().get("ekylibre_api")
         self.url = self.config_api.get('url')
-        self.version = self.config_api.get('version')
         self.user = self.config_api.get('user')
-        self.tocken = self.config_api.get('tocken')
-        self.endpoint = None
-        self.credentials = HTTPBasicAuth(self.user, self.tocken)
+        self.password = self.config_api.get('password')
+        self.session = requests.Session()
+        self.session.mount(self.url, TlsAdapter())
+        self.simple_token = ""
+
+    def get_token(self):
+        LOG.info("GET TOKEN")
+        try:
+            url = self.url + "tokens"
+            payload = {'email': self.user, 'password': self.password}
+            r = self.session.post(url, data=payload)
+            if r.status_code == requests.codes.ok:
+                token = r.json()
+                self.simple_token = "simple-token {user} {token}".format(user=self.user, token=token['token'])
+                self.session.headers.update({'Authorization': self.simple_token})
+
+        except Exception as err:
+            LOG.error("Unable to get token: {0}".format(err))
+            return "Unable to get token: {0}".format(err)
 
     def get(self, endpoint, payload=None):
+        if self.simple_token == "":
+            self.get_token()
+        LOG.error("SimpleToken = " + self.simple_token)
         try:
-            url = self.url + "/" + self.version + "/" + endpoint
-            r = requests.get(url, payload, auth=self.credentials)
+            url = self.url + endpoint
+            r = self.session.get(url)
             return r.json()
 
-        except Exception:
-            return 'Error'
+        except Exception as err:
+            return "API GET error: {0}".format(err)
 
     def post(self, endpoint, payload):
+        if self.simple_token == "":
+            self.get_token()
+        LOG.error("SimpleToken = " + self.simple_token)
+
         try:
-            url = self.url + "/" + self.version + "/" + endpoint
-            r = requests.post(url, json=payload, auth=self.credentials)
+            url = self.url + endpoint
+            r = self.session.post(url, json=payload)
             return r.json()
 
-        except Exception:
-            return 'Error'
+        except Exception as err:
+            return "API POST error: {0}".format(err)
