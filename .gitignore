@@ -4,7 +4,7 @@
 *.swp
 *~
 mimic
-skills
+/skills
 pocketsphinx-python
 *.egg-info/
 build
