@@ -165,7 +165,7 @@ def pronounce_number_fr(num, places=2):
         tens = int(num-int(num) % 10)
         ones = int(num-tens)
         if ones != 0:
-            if tens > 10 and tens <= 60 and int(num-tens) == 1:
+            if 10 < tens <= 60 and int(num - tens) == 1:
                 result += NUM_STRING_FR[tens] + "-et-" + NUM_STRING_FR[ones]
             elif num == 71:
                 result += "soixante-et-onze"
@@ -297,7 +297,26 @@ def nice_time_fr(dt, speech=True, use_24hour=False, use_ampm=False):
                 speak += " du soir"
             elif hour > 12:
                 speak += " de l'après-midi"
-            elif hour > 0 and hour < 12:
+            elif 0 < hour < 12:
                 speak += " du matin"
 
     return speak
+
+
+def nice_date_fr(local_date):
+
+    # dates are returned as, for example:
+    # "Samstag, der siebte Juli zweitausendachtzehn"
+    # this returns the years as regular numbers,
+    # not 19 hundred ..., but one thousand nine hundred
+    # which is fine from the year 2000
+
+    fr_months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                 'juillet', 'août', 'septembre', 'octobre', 'novembre',
+                 'décemnre']
+
+    fr_weekdays = ['lundi', 'mardi', 'mercredi',
+                   'jeudi', 'vendredi', 'samdi', 'dimanche']
+
+    return "{0} {1} {2}".format(fr_weekdays[local_date.weekday()], pronounce_number_fr(local_date.day),
+                                fr_months[local_date.month - 1])
