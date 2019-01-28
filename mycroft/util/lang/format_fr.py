@@ -301,3 +301,22 @@ def nice_time_fr(dt, speech=True, use_24hour=False, use_ampm=False):
                 speak += " du matin"
 
     return speak
+
+
+def nice_date_fr(local_date):
+    # dates are returned as, for example:
+    # "lundi vingt-huit janvier deux-mille-dix-neux"
+    # this returns the years as regular numbers,
+    # not 19 hundred ..., but one thousand nine hundred
+    # which is fine from the year 2000
+
+    fr_months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+
+    fr_weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samdi', 'dimanche']
+
+    return "{weekday} {day} {month} {year}".format(
+        weekday=fr_weekdays[local_date.weekday()],
+        day=pronounce_number_fr(local_date.day),
+        month=fr_months[local_date.month - 1],
+        year=pronounce_number_fr(local_date.year))
